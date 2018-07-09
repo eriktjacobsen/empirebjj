@@ -1,0 +1,12 @@
+# Color settings (hex-codes without the leading hash-tag)
+color:
+  primary: E13343
+  secondary: D72A38   
+  secondary-dark: 333
+  muted: 777
+  font-light-grey: D3D8DA
+  font-dark-grey: 4F575A
+# Font Families
+font:
+  primary: '"Open Sans Condensed", sans-serif;'
+  secondary: '"Open Sans", sans-serif;'

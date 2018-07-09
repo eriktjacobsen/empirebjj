@@ -1,0 +1,54 @@
+url: https://empirebjj.com
+baseurl: 
+
+# Site settings
+title: Empire Bjj
+email: info@empirebjj.com
+description: "Empire BJJ - old school Brazilian Jiu-Jitsu taught by Kurt Osiander and Jake Scovel in San Francisco's Mission District in California"
+
+
+# Team names, titles and social links
+people:
+- name: Kurt Osiander
+  pic: 1
+  position: Head Instructor
+  social:
+    # - title: twitter
+    #   url: #
+    # - title: facebook
+    #   url: #
+    # - title: stack-overflow
+    #   url: #
+
+- name: Jake Scovel
+  pic: 2
+  position: Head Instructor
+  social:
+    # - title: twitter
+    #   url: #
+    # - title: facebook
+    #   url: #
+    # - title: linkedin
+    #   url: #
+
+# Social networks usernames (many more available: google-plus, flickr, dribbble, pinterest, instagram, tumblr, linkedin, etc.)
+social:
+  # - title: twitter
+  #   url: http://twitter.com/jekyllrb
+  - title: facebook
+    url: https://www.facebook.com/empirejiujitsusf/
+  # - title: stack-overflow
+  #   url: http://stackoverflow.com/questions/tagged/jekyll
+  # - title: bitbucket 
+  #   url: http://bitbucket.org/jekyll
+  # - title: github
+  #   url: http://github.com/jekyll
+
+# Postal address (add as many lines as necessary)
+address:
+  - line: 2356 Mission St
+  - line: San Francisco, CA 94110
+
+# Build settings
+markdown: kramdown
+permalink: pretty

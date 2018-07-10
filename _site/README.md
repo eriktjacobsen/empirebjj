@@ -1,2 +1,0 @@
-# empirebjj
-Site for EmpireBJJ

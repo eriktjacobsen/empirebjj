@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Compiled site
+_site/
+
 # Runtime data
 pids
 *.pid

@@ -1,5 +1,4 @@
 <IfModule mod_deflate.c>
-
     # Force compression for mangled headers.
     # http://developer.yahoo.com/blogs/ydn/posts/2010/12/pushing-beyond-gzipping
     <IfModule mod_setenvif.c>

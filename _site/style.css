@@ -127,13 +127,13 @@ fieldset[disabled] .btn-primary.active {
 }
 
 .btn-xl {
-    padding: 20px 40px;
+    padding: 10px 20px;
     border-color: #E13343;
     border-radius: 3px;
     text-transform: uppercase;
-    font-family: "Open Sans Condensed", sans-serif;;
-    font-size: 18px;
-    font-weight: 700;
+    font-family: "Open Sans", sans-serif;;
+    font-size: 14px;
+    font-weight: 400;
     color: #fff;
     background-color: #E13343;
 }
@@ -309,7 +309,7 @@ header .intro-text {
 header .intro-text .intro-lead-in {
     margin-bottom: 25px;
     font-family: "Open Sans", sans-serif;;
-    color: #4F575A;
+    color: #D72A38;
     font-weight: 300;
     font-size: 14px;
     line-height: 1.2;
@@ -334,7 +334,7 @@ header .intro-text .intro-heading {
     header .intro-text .intro-lead-in {
         margin-bottom: 25px;
         font-family: "Open Sans", sans-serif;;
-        color: #4F575A;
+        color: #D72A38;
         font-weight: 300;
         font-size: 20px;
         line-height: 1;
@@ -707,6 +707,7 @@ section#contact .form-group {
 
 section#contact .form-group input,
 section#contact .form-group textarea {
+    font-weight: 300;
     padding: 20px;
 }
 

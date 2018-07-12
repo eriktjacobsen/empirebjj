@@ -664,13 +664,22 @@ section h3.section-subheading {
     margin-top: 25px;
     margin-bottom: 0;
     text-transform: none;
-    color: #{{ site.data.template.color.font-light-grey }};
+    color: #{{ site.data.template.color.secondary }};
 }
 
 .team-member p {
     margin-top: 0;
     color: #{{ site.data.template.color.font-dark-grey }};
-
+}
+.team-member .bio {
+    text-align: left;
+    color: #{{ site.data.template.color.font-light-grey }};
+    line-height: 1.5;
+    font-weight: 300;
+    letter-spacing: 0.4px;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 0 10%;
 }
 
 aside.clients img {
@@ -907,6 +916,8 @@ section#schedule .section-heading {
 #schedule .schedule-large-container {
     display: grid;
     grid-template-columns: repeat(3, auto);
+    -ms-grid-columns: repeat(3, auto);
+
 }
 
 .schedule-large-container .short {
@@ -923,6 +934,7 @@ section#schedule .section-heading {
 @media(min-width:768px) {
     #schedule .schedule-large-container {
         grid-template-columns: repeat(7, auto);
+        -ms-grid-columns: repeat(7, auto);
     }
     .schedule-large-container .short {
         display: initial;

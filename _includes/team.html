@@ -14,16 +14,18 @@
                         <img src="img/team/{{ member.pic }}.jpg" class="img-responsive img-circle" alt="">
                         <h4>{{ member.name }}</h4>
                         <p>{{ member.position }}</p>
-                        <ul class="list-inline social-buttons">
+                        {% for paragraph in member.description %}
+                          <p class='bio'>{{ paragraph.text }}</p>
+                        {% endfor %}
+                        <!-- <ul class="list-inline social-buttons">
                             {% for network in member.social %}
-                            <li>
-                                <a href="{{ network.url }}">
-                                    <i class="fa fa-{{ network.title }}"></i>
-                                </a>
-                            </li>
+                                <li>
+                                    <a href="{{ network.url }}">
+                                        <i class="fa fa-{{ network.title }}"></i>
+                                    </a>
+                                </li>
                             {% endfor %}
-
-                        </ul>
+                        </ul> -->
                     </div>
                 </div>
                 {% endfor %}

@@ -13,6 +13,10 @@ people:
 - name: Kurt Osiander
   pic: 1
   position: Head Instructor
+  description: 
+    - text: 'The philosophy that’s driven Kurt Osiander to win world championships, teach seminars everywhere from Sacramento to Shanghai, and amass a cult following still rings true today — real jiu jitsu is never watered down.'
+    - text: 'Kurt believes the only way to progress is through persistence. Whether you’re sharpening your skills as a world class competitor, improving as hobbyist, or just starting jiu jitsu, all are welcome at Empire BJJ.'
+    - text: 'Practicing jiu jitsu means starting, or continuing, a journey unlike any other. Above all, Kurt believes you should have fun along the way — just don’t expect any shortcuts.'
   social:
     # - title: twitter
     #   url: #
@@ -24,6 +28,10 @@ people:
 - name: Jake Scovel
   pic: 2
   position: Head Instructor
+  description: 
+    - text: 'Jake Scovel’s approach to jiu jitsu is founded on economy of motion, focusing on using the body’s natural structure to maximize both efficiency and offense.'
+    - text: 'On the mats, every detail counts. After years and years spent competing, Jake executes techniques with precision and a passion for showing others how to improve their game.'
+    - text: 'Empire BJJ is an academy in the truest sense. When you step on the mats, you’re there to learn. Jake takes that title to heart, helping anyone and everyone refine their game.'
   social:
     # - title: twitter
     #   url: #

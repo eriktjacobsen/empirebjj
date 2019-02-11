@@ -917,42 +917,26 @@ section#schedule .section-heading {
 }
 
 #schedule .schedule-large-container {
-    -webkit-column-count: 3;
-    -moz-column-count: 3;
-    column-count: 3;
+    -webkit-column-count: 7;
+    -moz-column-count: 7;
+    column-count: 7;
+    grid-template-columns: repeat(7, auto);
+    -ms-grid-columns: repeat(7, auto);
     display: grid;
     grid-auto-flow: column;
-    grid-template-rows: repeat(5, auto);
-    -ms-grid--rows: repeat(5, auto);
-    grid-template-columns: repeat(3, auto);
-    -ms-grid-columns: repeat(3, auto);
-}
-
-#schedule .schedule-large-container .short {
-    display: none;
-}
-#schedule .schedule-large-container span.short {
-    display: initial;
+    grid-template-rows: repeat(6, auto);
+    -ms-grid--rows: repeat(6, auto);
 }
 
 .schedule-large-container .time {
     padding: 7px 0;
 }
 
-@media(min-width: 996px) {
-    #schedule .schedule-large-container {
-        -webkit-column-count: 7;
-        -moz-column-count: 7;
-        column-count: 7;
-        grid-template-columns: repeat(7, auto);
-        -ms-grid-columns: repeat(7, auto);
-    }
-    #schedule .schedule-large-container .short {
-        display: block;
-    }
-    #schedule .schedule-large-container span.short {
-        display: none;
-    }
+#schedule .schedule-large-container .short {
+    display: block;
+}
+#schedule .schedule-large-container span.short {
+    display: none;
 }
 
 #schedule .day {

@@ -1,4 +1,8 @@
 <?php
+require_once 'recaptcha/autoload.php';
+$secret = "";
+$recaptcha = new \ReCaptcha\ReCaptcha($secret);
+
 // Check for empty fields
 if(empty($_POST['name'])  		||
    empty($_POST['email']) 		||
@@ -9,6 +13,13 @@ if(empty($_POST['name'])  		||
 	echo "No arguments Provided!";
 	return false;
    }
+// Make sure recaptcha passed
+$resp = $recaptcha->setExpectedHostname('empirebjj.com')
+    ->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR']);
+if (!$resp->isSuccess()) {
+    echo "Recaptcha Failed!";
+    return false;
+}
 
 $name = $_POST['name'];
 $email = $_POST['email'];

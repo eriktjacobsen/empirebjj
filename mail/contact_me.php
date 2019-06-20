@@ -1,5 +1,5 @@
 <?php
-require_once 'recaptcha/autoload.php';
+require_once 'mail/recaptcha/autoload.php';
 $secret = "";
 $recaptcha = new \ReCaptcha\ReCaptcha($secret);
 

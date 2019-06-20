@@ -23,7 +23,7 @@ $(function() {
                 url: "././mail/contact_me.php",
                 type: "POST",
                 data: {
-                    g-recaptcha-response: recaptcha,
+                    "g-recaptcha-response": recaptcha,
                     name: name,
                     phone: phone,
                     email: email,

@@ -29,7 +29,7 @@ $message = $_POST['message'];
 // Create the email and send the message
 $to = 'info@empirejiujitsu.com'; // Add your email address inbetween the '' replacing yourname@yourdomain.com - This is where the form will send a message to.
 $email_subject = "New message to EmpireBJJ[$name]";
-$email_body = "Here are the details:\n\nName: $name\n\nEmail: $email_address\n\nPhone: $phone\n\nMessage:\n$message";
+$email_body = "Here are the details:\n\nName: $name\n\nEmail: $email\n\nPhone: $phone\n\nMessage:\n$message";
 $headers = "From: noreply@empirejiujitsu.com\n"; // This is the email address the generated message will be from. We recommend using something like noreply@yourdomain.com.
 $headers .= "Reply-To: $email";
 mail($to,$email_subject,$email_body,$headers);

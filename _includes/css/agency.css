@@ -4,6 +4,18 @@
  * For details, see http://www.apache.org/licenses/LICENSE-2.0.
  */
 
+html {
+    scroll-behavior: smooth;
+}
+
+section {
+    scroll-margin-top: 75px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
 body {
     overflow-x: hidden;
     font-family: 'Open Sans', sans-serif;
@@ -276,7 +288,7 @@ header {
     color: #fff;
     background-attachment: scroll;
     background-color: #0B0B0B;
-    background-image: url('{{ site.baseurl }}/img/header-bg.jpg');
+    background-image: url('{{ '/img/header-bg.jpg' | asset_url }}');
     background-position: center center;
     background-repeat: none;
     -webkit-background-size: cover;
@@ -696,7 +708,7 @@ section#team .section-heading {
 
 section#contact {
     background-color: #0A0A0A;
-    background-image: url('{{ site.baseurl }}/img/map-image.png');
+    background-image: url('{{ '/img/map-image.webp' | asset_url }}');
     background-position: center;
     background-repeat: no-repeat;
 }

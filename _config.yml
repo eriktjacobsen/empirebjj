@@ -61,3 +61,9 @@ address:
 # Build settings
 markdown: kramdown
 permalink: pretty
+include:
+  - .htaccess
+exclude:
+  - tests
+  - README.md
+  - vendor

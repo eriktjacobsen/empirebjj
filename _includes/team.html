@@ -10,7 +10,8 @@
                 {% for member in site.people %}
                 <div class="col-sm-6">
                     <div class="team-member">
-                        <img src="img/team/{{ member.pic }}.jpg" class="img-responsive img-circle" alt="">
+                        {% assign portrait = '/img/team/' | append: member.pic | append: '.jpg' %}
+                        <img src="{{ portrait | asset_url }}" width="800" height="800" loading="lazy" decoding="async" class="img-responsive img-circle" alt="{{ member.name | escape }}">
                         <h4>{{ member.name }}</h4>
                         <p>{{ member.position }}</p>
                         {% for paragraph in member.description %}

@@ -1,71 +1,36 @@
 <?php
-require_once 'recaptcha/autoload.php';
+ini_set('display_errors', '0');
+require_once __DIR__ . '/contact_handler.php';
+
+// Secrets intentionally stay out of this public repository. Existing private
+// production assignments can remain here; environment variables are optional.
 $secret = "";
-$recaptcha = new \ReCaptcha\ReCaptcha($secret);
+// MailChimp API credentials may be supplied by the existing production setup.
+$secret = getenv('RECAPTCHA_SECRET') ?: $secret;
+$apiKey = getenv('MAILCHIMP_API_KEY') ?: ($apiKey ?? '');
+$listID = getenv('MAILCHIMP_LIST_ID') ?: ($listID ?? '');
 
-// Check for empty fields
-if(empty($_POST['name'])  		||
-   empty($_POST['email']) 		||
-   empty($_POST['phone']) 		||
-   empty($_POST['message'])	||
-   !filter_var($_POST['email'],FILTER_VALIDATE_EMAIL))
-   {
-	echo "No arguments Provided!";
-	return false;
-   }
-// Make sure recaptcha passed
-$resp = $recaptcha->verify($_POST['g-recaptcha-response'], $_SERVER['REMOTE_ADDR']);
-if (!$resp->isSuccess()) {
-    echo "Recaptcha Failed!";
-    return false;
+$requestId = bin2hex(random_bytes(8));
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Request-ID: ' . $requestId);
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') header('Allow: POST');
+
+// Convert PHP transport warnings into failures handled by the stage-specific
+// logger. Raw warning text can contain submitted data and must not be logged.
+set_error_handler(function ($severity, $message, $file, $line) {
+    throw new ErrorException('Contact transport warning', 0, $severity, $file, $line);
+});
+try {
+    [$status, $response] = contact_handle($_SERVER['REQUEST_METHOD'] ?? '', $_POST,
+        ['secret' => $secret, 'apiKey' => $apiKey, 'listID' => $listID],
+        ['verify' => 'contact_verify', 'send' => 'mail', 'subscribe' => 'contact_subscribe', 'log' => 'contact_log'],
+        $requestId);
+} catch (Throwable $error) {
+    contact_log('handler_failed', $requestId);
+    [$status, $response] = contact_response(503, false, 'The contact form is temporarily unavailable. Please contact us by phone.', $requestId);
+} finally {
+    restore_error_handler();
 }
-
-$name = $_POST['name'];
-$email = $_POST['email'];
-$phone = $_POST['phone'];
-$message = $_POST['message'];
-
-
-// Create the email and send the message
-$to = 'info@empirejiujitsu.com'; // Add your email address inbetween the '' replacing yourname@yourdomain.com - This is where the form will send a message to.
-$email_subject = "New message to EmpireBJJ[$name]";
-$email_body = "Here are the details:\n\nName: $name\n\nEmail: $email\n\nPhone: $phone\n\nMessage:\n$message";
-$headers = "From: noreply@empirejiujitsu.com\n"; // This is the email address the generated message will be from. We recommend using something like noreply@yourdomain.com.
-$headers .= "Reply-To: $email";
-mail($to,$email_subject,$email_body,$headers);
-//AutoRespond
-$respondSubject = 'Thank you for contacting Empire Jiu Jitsu';
-$respondBody = "Thank you for your loyalty and support.\n\nWe are open for classes and registration, information at http://www.empirebjj.com/\n\n- Kurt, Jake, and Empire family";
-$respondHeaders = 'From: ' .' <'.$to.'>' . "\r\n" . 'Reply-To: ' . $to;
-
-mail($email, $respondSubject, $respondBody, $respondHeaders);
-
-
-//MailChimp
-// MailChimp API credentials
-
-// MailChimp API URL
-$memberID = md5(strtolower($email));
-$dataCenter = substr($apiKey,strpos($apiKey,'-')+1);
-$url = 'https://' . $dataCenter . '.api.mailchimp.com/3.0/lists/' . $listID . '/members/' . $memberID;
-
-// member information
-$json = json_encode(array(
-    'email_address' => $email,
-    'status'        => 'subscribed'));
-
-// send a HTTP POST request with curl
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_USERPWD, 'user:' . $apiKey);
-curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-$result = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-return true;
-?>
+http_response_code($status);
+echo json_encode($response);

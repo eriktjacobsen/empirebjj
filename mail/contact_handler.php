@@ -8,11 +8,26 @@ function contact_response($status, $success, $message, $requestId)
 
 function contact_log($event, $requestId, array $details = [])
 {
-    // Only callers' fixed event names, numeric transport codes, and request IDs
-    // belong here. Never log submitted fields, credentials, or response bodies.
+    // Only fixed event names, request IDs, and non-sensitive diagnostics belong
+    // here. Submitted fields are written only to the contact archives.
     error_log(json_encode(array_merge([
         'component' => 'contact_form', 'event' => $event, 'request_id' => $requestId,
     ], $details), JSON_UNESCAPED_SLASHES));
+}
+
+function contact_archive(array $paths, array $record, callable $log)
+{
+    $line = json_encode($record, JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+    foreach ($paths as $destination => $path) {
+        try {
+            $written = @file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
+        } catch (Throwable $error) {
+            $written = false;
+        }
+        if ($written !== strlen($line)) {
+            $log('contact_archive_write_failed', ['destination' => $destination]);
+        }
+    }
 }
 
 function contact_handle($method, array $input, array $config, array $services, $requestId)
@@ -55,22 +70,43 @@ function contact_handle($method, array $input, array $config, array $services, $
     }
 
     $to = 'info@empirejiujitsu.com';
+    $recipients = [
+        'primary' => $to,
+        'backup' => 'scovelbjj@gmail.com',
+        'test' => 'eriktjacobsen@gmail.com',
+    ];
     $subject = 'New message to EmpireBJJ[' . $input['name'] . ']';
     $body = "Here are the details:\n\nName: {$input['name']}\n\nEmail: {$input['email']}\n\nPhone: {$input['phone']}\n\nMessage:\n{$input['message']}";
     $headers = "From: noreply@empirejiujitsu.com\r\nReply-To: " . $input['email'];
-    try {
-        $accepted = $services['send']($to, $subject, $body, $headers);
-    } catch (Throwable $error) {
-        $accepted = false;
+    $gymAccepted = false;
+    $mailResults = [];
+    foreach ($recipients as $role => $recipient) {
+        try {
+            $accepted = $services['send']($recipient, $subject, $body, $headers);
+        } catch (Throwable $error) {
+            $accepted = false;
+        }
+        $mailResults[$role] = $accepted ? 'accepted' : 'failed';
+        $log($role . '_mail_' . $mailResults[$role]);
+        if ($accepted && $role !== 'test') {
+            $gymAccepted = true;
+        }
     }
-    if (!$accepted) {
-        $log('primary_mail_failed');
+    contact_archive($config['archivePaths'] ?? [], [
+        'timestamp' => date(DATE_ATOM),
+        'request_id' => $requestId,
+        'name' => $input['name'],
+        'email' => $input['email'],
+        'phone' => $input['phone'],
+        'message' => $input['message'],
+        'mail' => $mailResults,
+    ], $log);
+    if (!$gymAccepted) {
         return contact_response(502, false, 'Your message could not be sent. Please try again or contact us by phone.', $requestId);
     }
-    $log('primary_mail_accepted');
 
-    // Once the primary mail is accepted, secondary failures must not invite a
-    // retry that would send the gym the same enquiry again.
+    // A send accepted for either gym recipient is enough to avoid asking the
+    // visitor to send the same enquiry again.
     try {
         $responded = $services['send']($input['email'], 'Thank you for contacting Empire Jiu Jitsu',
             "Thank you for your loyalty and support.\n\nWe are open for classes and registration, information at https://www.empirebjj.com/\n\n- Kurt, Jake, and Empire family",

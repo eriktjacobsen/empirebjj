@@ -17,13 +17,20 @@ header('X-Request-ID: ' . $requestId);
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') header('Allow: POST');
 
 // Convert PHP transport warnings into failures handled by the stage-specific
-// logger. Raw warning text can contain submitted data and must not be logged.
+// logger. Raw warning text can contain submitted data and must stay out of the
+// PHP error log.
 set_error_handler(function ($severity, $message, $file, $line) {
     throw new ErrorException('Contact transport warning', 0, $severity, $file, $line);
 });
 try {
     [$status, $response] = contact_handle($_SERVER['REQUEST_METHOD'] ?? '', $_POST,
-        ['secret' => $secret, 'apiKey' => $apiKey, 'listID' => $listID],
+        [
+            'secret' => $secret, 'apiKey' => $apiKey, 'listID' => $listID,
+            'archivePaths' => [
+                'httpd' => '/var/log/httpd/empire_contact.log',
+                'site' => '/var/www/empirebjj/raw_contacts.log',
+            ],
+        ],
         ['verify' => 'contact_verify', 'send' => 'mail', 'subscribe' => 'contact_subscribe', 'log' => 'contact_log'],
         $requestId);
 } catch (Throwable $error) {

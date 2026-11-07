@@ -14,6 +14,7 @@ function scenario(array $options = [])
     $input = $options['input'] ?? ['name' => '<b>Example</b> User', 'email' => 'visitor@example.invalid',
         'phone' => '123', 'message' => 'private message that must not enter logs', 'g-recaptcha-response' => 'private-token'];
     $config = $options['config'] ?? ['secret' => 'private-secret', 'apiKey' => 'private-key-us1', 'listID' => 'private-list'];
+    $config['archivePaths'] = $options['archivePaths'] ?? [];
     $logs = [];
     $calls = [];
     $services = [
@@ -24,7 +25,12 @@ function scenario(array $options = [])
             return $options['verification'] ?? ['success' => true, 'unavailable' => false];
         },
         'send' => function ($to, $subject, $body, $headers) use (&$calls, $options) {
-            $stage = count(array_filter($calls, function ($call) { return $call === 'primary' || $call === 'autoresponse'; })) === 0 ? 'primary' : 'autoresponse';
+            $stage = [
+                'info@empirejiujitsu.com' => 'primary',
+                'scovelbjj@gmail.com' => 'backup',
+                'eriktjacobsen@gmail.com' => 'test',
+                'visitor@example.invalid' => 'autoresponse',
+            ][$to] ?? 'unexpected_recipient';
             $calls[] = $stage;
             if (!empty($options[$stage . 'Throws'])) throw new RuntimeException($body);
             return $options[$stage] ?? true;
@@ -38,7 +44,7 @@ function scenario(array $options = [])
     [$status, $body] = contact_handle($options['method'] ?? 'POST', $input, $config, $services, 'request-123');
     $encoded = json_encode($logs);
     foreach (['visitor@example.invalid', '<b>Example</b>', 'private message', 'private-token', 'private-secret', 'private-key', 'private-list'] as $private) {
-        check(strpos($encoded, $private) === false, 'Private data entered logs');
+        check(strpos($encoded, $private) === false, 'Private data entered the PHP error log');
     }
     check($body['request_id'] === 'request-123', 'Missing correlation ID');
     return [$status, $body, array_column($logs, 0), $calls, $logs];
@@ -46,8 +52,8 @@ function scenario(array $options = [])
 
 [$code, $body, $logs, $calls] = scenario();
 check($code === 200 && $body['success'] === true, 'Successful submission failed');
-check($calls === ['verify', 'primary', 'autoresponse', 'subscribe'], 'Side-effect order changed');
-check($logs === ['primary_mail_accepted'], 'Unexpected success logging');
+check($calls === ['verify', 'primary', 'backup', 'test', 'autoresponse', 'subscribe'], 'Expected all three recipients before autoresponse and subscription');
+check($logs === ['primary_mail_accepted', 'backup_mail_accepted', 'test_mail_accepted'], 'Missing recipient acceptance logs');
 
 foreach ([['method' => 'GET'], ['input' => []], ['input' => ['name' => ['invalid']]] ] as $options) {
     [$code, $body, $logs, $calls] = scenario($options);
@@ -66,9 +72,18 @@ check($code === 503 && $logs === ['captcha_service_failed'], 'Verification excep
 
 foreach ([['primary' => false], ['primaryThrows' => true]] as $options) {
     [$code, $body, $logs, $calls] = scenario($options);
-    check($code === 502 && !$body['success'] && $logs === ['primary_mail_failed'], 'Primary mail failure hidden');
-    check($calls === ['verify', 'primary'], 'Primary mail failure caused secondary work');
+    check($code === 200 && $body['success'], 'Backup acceptance did not prevent a duplicate retry');
+    check($logs === ['primary_mail_failed', 'backup_mail_accepted', 'test_mail_accepted'], 'Primary failure or backup acceptance was not logged');
+    check($calls === ['verify', 'primary', 'backup', 'test', 'autoresponse', 'subscribe'], 'Primary failure prevented another send');
 }
+[$code, $body, $logs] = scenario(['backupThrows' => true, 'test' => false]);
+check($code === 200 && $body['success'], 'Copy failures overrode primary acceptance');
+check($logs === ['primary_mail_accepted', 'backup_mail_failed', 'test_mail_failed'], 'Copy failures were not logged');
+
+[$code, $body, $logs, $calls] = scenario(['primary' => false, 'backup' => false]);
+check($code === 502 && !$body['success'], 'Test acceptance alone was reported as success');
+check($logs === ['primary_mail_failed', 'backup_mail_failed', 'test_mail_accepted'], 'Missing logs when both gym sends failed');
+check($calls === ['verify', 'primary', 'backup', 'test'], 'Both gym sends failed but autoresponse or subscription still ran');
 foreach ([['autoresponse' => false], ['autoresponseThrows' => true]] as $options) {
     [$code, $body, $logs, $calls] = scenario($options);
     check($code === 200 && $body['success'] && in_array('autoresponse_failed', $logs, true), 'Autoresponse failure invited duplicate enquiry');
@@ -82,6 +97,44 @@ foreach ([['subscription' => ['http_status' => 400, 'error_code' => 0]], ['subsc
 check($code === 200 && !in_array('subscribe', $calls, true), 'Disabled subscription caused work or failure');
 [$code, $body, $logs] = scenario(['config' => ['secret' => 'private-secret', 'apiKey' => 'private-key', 'listID' => '']]);
 check($code === 200 && in_array('subscription_configuration_failed', $logs, true), 'Partial subscription configuration not logged');
+
+$httpdArchive = tempnam(sys_get_temp_dir(), 'contact-httpd-');
+$siteArchive = tempnam(sys_get_temp_dir(), 'contact-site-');
+try {
+    $message = "First line\nSecond line | Mail to info: Success";
+    $options = [
+        'input' => ['name' => 'Example User', 'email' => 'visitor@example.invalid', 'phone' => '123',
+            'message' => $message, 'g-recaptcha-response' => 'private-token'],
+        'archivePaths' => ['httpd' => $httpdArchive, 'site' => $siteArchive],
+        'primary' => false, 'backup' => false, 'test' => false,
+    ];
+    [$code] = scenario($options);
+    $lines = file($siteArchive, FILE_IGNORE_NEW_LINES);
+    check($code === 502 && count($lines) === 1, 'All mail sends failed without a recoverable archive record');
+    check(file($httpdArchive, FILE_IGNORE_NEW_LINES) === $lines, 'The archives did not receive identical records');
+    $record = json_decode($lines[0], true);
+    check($record['name'] === 'Example User' && $record['email'] === 'visitor@example.invalid'
+        && $record['phone'] === '123' && $record['message'] === $message, 'The archive lost contact details or message formatting');
+    check($record['request_id'] === 'request-123' && $record['mail'] === ['primary' => 'failed', 'backup' => 'failed', 'test' => 'failed'],
+        'The archive is missing the request ID or mail outcomes');
+    check(strpos($lines[0], 'private-token') === false && strpos($lines[0], 'private-secret') === false, 'The archive includes verification secrets');
+
+    $options['archivePaths']['httpd'] = $httpdArchive . '/unwritable.log';
+    $options['primary'] = true;
+    set_error_handler(function () { throw new ErrorException('Simulated endpoint warning handler'); });
+    try {
+        [$code, $body, $logs, $calls, $events] = scenario($options);
+    } finally {
+        restore_error_handler();
+    }
+    check($code === 200 && $body['success'], 'An archive write failure overrode mail acceptance');
+    check(in_array(['contact_archive_write_failed', 'request-123', ['destination' => 'httpd']], $events, true), 'The failed archive destination was not logged');
+    $updatedLines = file($siteArchive, FILE_IGNORE_NEW_LINES);
+    check(count($updatedLines) === 2 && $updatedLines[0] === $lines[0], 'An archive failure prevented appending to the other file');
+} finally {
+    unlink($httpdArchive);
+    unlink($siteArchive);
+}
 
 // Verify the actual PHP logger, not just the injected test logger.
 $logFile = tempnam(sys_get_temp_dir(), 'contact-log-');

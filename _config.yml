@@ -67,3 +67,4 @@ exclude:
   - tests
   - README.md
   - vendor
+  - raw_contacts.log
